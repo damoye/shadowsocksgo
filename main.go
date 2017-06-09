@@ -7,8 +7,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/damoye/shadowsocksgo/encrypt"
-	"github.com/damoye/shadowsocksgo/socks5"
+	"github.com/damoye/ssgo/encrypt"
+	"github.com/damoye/ssgo/socks5"
 )
 
 var (

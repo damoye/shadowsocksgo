@@ -37,7 +37,7 @@ func Handshake(conn net.Conn) (Address, error) {
 		return nil, err
 	}
 	if buf[0] != 0x05 { // VER: 5
-		return nil, errors.New("not socks5")
+		return nil, errors.New(fmt.Sprintln("not socks5:", buf[0]))
 	}
 	buf = make([]byte, buf[1])
 	if _, err := io.ReadFull(conn, buf); err != nil {
