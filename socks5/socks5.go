@@ -31,13 +31,13 @@ func (a Address) String() string {
 
 // Handshake for SOCKS5
 func Handshake(conn net.Conn) (Address, error) {
-	// read VER NMETHODS METHODS
+	// read VER, NMETHODS, METHODS
 	buf := make([]byte, 2)
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
 	if buf[0] != 0x05 { // VER: 5
-		return nil, errors.New(fmt.Sprintln("not socks5:", buf[0]))
+		return nil, errors.New(fmt.Sprint("not socks5:", buf[0]))
 	}
 	buf = make([]byte, buf[1])
 	if _, err := io.ReadFull(conn, buf); err != nil {
@@ -54,12 +54,12 @@ func Handshake(conn net.Conn) (Address, error) {
 		return nil, errors.New(fmt.Sprint("no method noAuth: ", buf))
 	}
 
-	// write VER METHOD
+	// write VER, METHOD
 	if _, err := conn.Write([]byte{0x05, 0x00}); err != nil {
 		return nil, err
 	}
 
-	// read VER CMD RSV ATYP DST.ADDR DST.PORT
+	// read VER, CMD, RSV, ATYP, DST.ADDR, DST.PORT
 	buf = make([]byte, 4)
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
@@ -95,7 +95,9 @@ func Handshake(conn net.Conn) (Address, error) {
 	}
 
 	// write VER REP RSV ATYP BND.ADDR BND.PORT
-	conn.Write([]byte("\x05\x00\x00\x01\x00\x00\x00\x00\x10\x10"))
+	if _, err := conn.Write([]byte("\x05\x00\x00\x01\x00\x00\x00\x00\x10\x10")); err != nil {
+		return nil, err
+	}
 
 	// return ATYP DST.ADDR DST.PORT
 	return Address(append([]byte{addrType}, buf...)), nil
