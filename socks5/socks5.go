@@ -1,6 +1,7 @@
 package socks5
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -8,25 +9,36 @@ import (
 	"strconv"
 )
 
+const (
+	ver5         = 0x05
+	methodNoAuth = 0x00
+	cmdConnect   = 0x01
+	atypIPV4     = 0x01
+	atypIPV6     = 0x04
+	atypHOST     = 0x03
+	repSucceeded = 0x00
+)
+
 // Address ...
 type Address []byte
 
 func (a Address) String() string {
-	var host, port string
+	var host string
+	var port uint16
 	switch a[0] {
-	case 0x01: // ATYP: IP V4 address
+	case atypIPV4:
 		host = net.IP(a[1 : 1+net.IPv4len]).String()
-		port = strconv.Itoa((int(a[1+net.IPv4len]) << 8) | int(a[1+net.IPv4len+1]))
-	case 0x04: // ATYP: IP V6 address
+		port = binary.BigEndian.Uint16(a[1+net.IPv4len:])
+	case atypIPV6:
 		host = net.IP(a[1 : 1+net.IPv6len]).String()
-		port = strconv.Itoa((int(a[1+net.IPv6len]) << 8) | int(a[1+net.IPv6len+1]))
-	case 0x03: // ATYP: DOMAINNAME
+		port = binary.BigEndian.Uint16(a[1+net.IPv6len:])
+	case atypHOST:
 		host = string(a[2 : 2+a[1]])
-		port = strconv.Itoa((int(a[2+a[1]]) << 8) | int(a[2+a[1]+1]))
+		port = binary.BigEndian.Uint16(a[2+a[1]:])
 	default:
 		return ""
 	}
-	return net.JoinHostPort(host, port)
+	return net.JoinHostPort(host, strconv.Itoa(int(port)))
 }
 
 // Handshake for SOCKS5
@@ -36,7 +48,7 @@ func Handshake(conn net.Conn) (Address, error) {
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
-	if buf[0] != 0x05 { // VER: 5
+	if buf[0] != ver5 { // VER: 5
 		return nil, errors.New(fmt.Sprint("not socks5:", buf[0]))
 	}
 	buf = make([]byte, buf[1])
@@ -45,7 +57,7 @@ func Handshake(conn net.Conn) (Address, error) {
 	}
 	noAuthExist := false
 	for _, method := range buf {
-		if method == 0x00 { // METHOD: NO AUTHENTICATION REQUIRED
+		if method == methodNoAuth {
 			noAuthExist = true
 			break
 		}
@@ -55,7 +67,7 @@ func Handshake(conn net.Conn) (Address, error) {
 	}
 
 	// write VER, METHOD
-	if _, err := conn.Write([]byte{0x05, 0x00}); err != nil {
+	if _, err := conn.Write([]byte{ver5, methodNoAuth}); err != nil {
 		return nil, err
 	}
 
@@ -64,22 +76,22 @@ func Handshake(conn net.Conn) (Address, error) {
 	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
-	if buf[1] != 0x01 { // CMD: CONNECT
+	if buf[1] != cmdConnect { // CMD: CONNECT
 		return nil, errors.New(fmt.Sprint("not connect cmd: ", buf[1]))
 	}
 	addrType := buf[3]
 	switch addrType {
-	case 0x01: // ATYP: IP V4 address
+	case atypIPV4:
 		buf = make([]byte, 4+2)
 		if _, err := io.ReadFull(conn, buf); err != nil {
 			return nil, err
 		}
-	case 0x04: // ATYP: IP V6 address
+	case atypIPV6:
 		buf = make([]byte, 16+2)
 		if _, err := io.ReadFull(conn, buf); err != nil {
 			return nil, err
 		}
-	case 0x03: // ATYP: DOMAINNAME
+	case atypHOST:
 		buf = make([]byte, 1)
 		if _, err := io.ReadFull(conn, buf); err != nil {
 			return nil, err
@@ -95,7 +107,8 @@ func Handshake(conn net.Conn) (Address, error) {
 	}
 
 	// write VER REP RSV ATYP BND.ADDR BND.PORT
-	if _, err := conn.Write([]byte("\x05\x00\x00\x01\x00\x00\x00\x00\x10\x10")); err != nil {
+	reply := []byte{ver5, repSucceeded, 0x00, atypIPV4, 0x00, 0x00, 0x00, 0x00, 0x10, 0x10}
+	if _, err := conn.Write(reply); err != nil {
 		return nil, err
 	}
 
