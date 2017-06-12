@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	infoLog  = log.New(os.Stderr, "INFO: ", log.LstdFlags|log.Lshortfile)
-	errorLog = log.New(os.Stderr, "ERRO: ", log.LstdFlags|log.Lshortfile)
+	logInfo  = log.New(os.Stderr, "INFO: ", log.LstdFlags|log.Lshortfile)
+	logError = log.New(os.Stderr, "ERRO: ", log.LstdFlags|log.Lshortfile)
 
 	server   = flag.String("s", "", "server address")
 	local    = flag.String("l", ":1080", "local address")
@@ -29,30 +29,30 @@ func handleConn(c net.Conn) {
 	defer c.Close()
 	target, err := socks5.Handshake(c)
 	if err != nil {
-		errorLog.Println("handshake:", err)
+		logError.Println("handshake:", err)
 		return
 	}
 	rc, err := net.Dial("tcp", *server)
 	if err != nil {
-		errorLog.Println("dial:", err)
+		logError.Println("dial:", err)
 		return
 	}
 	defer rc.Close()
-	infoLog.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), *server, target)
+	logInfo.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), *server, target)
 	rc, err = encrypt.NewEncryptedConn(rc, *password, target)
 	if err != nil {
-		errorLog.Println("newEncryptedConn:", err)
+		logError.Println("newEncryptedConn:", err)
 		return
 	}
 	if _, err = rc.Write(target); err != nil {
-		errorLog.Println("write:", err)
+		logError.Println("write:", err)
 		return
 	}
 	ch := make(chan error, 1)
 	go pipe(rc, c, ch)
 	go pipe(c, rc, ch)
 	if err = <-ch; err != nil {
-		errorLog.Println("pipe:", err)
+		logError.Println("pipe:", err)
 	}
 }
 
@@ -64,12 +64,13 @@ func main() {
 	}
 	ln, err := net.Listen("tcp", *local)
 	if err != nil {
-		errorLog.Fatalln("listen:", err)
+		logError.Fatalln("listen:", err)
 	}
+	logInfo.Println("listening at", *local)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			errorLog.Println("accept:", err)
+			logError.Println("accept:", err)
 			continue
 		}
 		go handleConn(conn)
