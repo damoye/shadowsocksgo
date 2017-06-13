@@ -14,7 +14,6 @@ import (
 var (
 	logInfo  = log.New(os.Stderr, "INFO: ", log.LstdFlags|log.Lshortfile)
 	logError = log.New(os.Stderr, "ERRO: ", log.LstdFlags|log.Lshortfile)
-
 	server   = flag.String("s", "", "server address")
 	local    = flag.String("l", ":1080", "local address")
 	password = flag.String("k", "", "password")

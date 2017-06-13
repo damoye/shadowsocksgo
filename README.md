@@ -1,7 +1,7 @@
 # ssgo
-There are too many features in Shadowsocks. I just want a TCP proxy with the AES-256-CFB encryption.
+There are too many features in Shadowsocks. I just want a TCP proxy client with the AES-256-CFB encryption.
 
-***"Do One Thing and Do It Well."***
+***Do One Thing and Do It Well.***
 
 ## Install
 
@@ -19,6 +19,4 @@ ssgo -s [server_address] -k [password]
 ## TODO
 
 - PAC
-- UDP
-- Server
 - Test coverage
