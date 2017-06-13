@@ -1,22 +1,28 @@
 # ssgo
-There are too many features in Shadowsocks. I just want a TCP proxy client with the AES-256-CFB encryption.
+A Shadowsocks client only supporting TCP relay and AES-256-CFB encryption.
 
 ***Do One Thing and Do It Well.***
-
 ## Install
-
 ```sh
 go get github.com/damoye/ssgo
 ```
-
 ## Usage
-Start a client connecting to a Shadowsocks server. The client listens on port 1080 for incoming SOCKS5 connections.
-
+```
+Usage of ssgo:
+  -s string
+    server address
+  -k string
+    password
+  -l string
+    SOCKS5 server address (default "127.0.0.1:1080")
+  -h string
+    PAC server address (default "127.0.0.1:8090")
+```
+### 1. Start ssgo
 ```sh
 ssgo -s [server_address] -k [password]
 ```
-
+### 2. Config PAC
+Config PAC to http://127.0.0.1:8090/proxy.pac
 ## TODO
-
-- PAC
 - Test coverage

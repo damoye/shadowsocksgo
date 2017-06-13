@@ -1,77 +1,35 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"io"
 	"log"
-	"net"
 	"os"
+	"os/signal"
 
-	"github.com/damoye/ssgo/encrypt"
-	"github.com/damoye/ssgo/socks5"
+	"github.com/damoye/ssgo/config"
 )
-
-var (
-	logInfo  = log.New(os.Stderr, "INFO: ", log.LstdFlags|log.Lshortfile)
-	logError = log.New(os.Stderr, "ERRO: ", log.LstdFlags|log.Lshortfile)
-	server   = flag.String("s", "", "server address")
-	local    = flag.String("l", ":1080", "local address")
-	password = flag.String("k", "", "password")
-)
-
-func pipe(dst net.Conn, src net.Conn, ch chan error) {
-	_, err := io.Copy(dst, src)
-	ch <- err
-}
-
-func handleConn(c net.Conn) {
-	defer c.Close()
-	target, err := socks5.Handshake(c)
-	if err != nil {
-		logError.Println("handshake:", err)
-		return
-	}
-	rc, err := net.Dial("tcp", *server)
-	if err != nil {
-		logError.Println("dial:", err)
-		return
-	}
-	defer rc.Close()
-	logInfo.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), *server, target)
-	rc, err = encrypt.NewEncryptedConn(rc, *password, target)
-	if err != nil {
-		logError.Println("newEncryptedConn:", err)
-		return
-	}
-	if _, err = rc.Write(target); err != nil {
-		logError.Println("write:", err)
-		return
-	}
-	ch := make(chan error, 1)
-	go pipe(rc, c, ch)
-	go pipe(c, rc, ch)
-	if err = <-ch; err != nil {
-		logError.Println("pipe:", err)
-	}
-}
 
 func main() {
+	conf := config.Config{}
+	flag.StringVar(&conf.ServerAddr, "s", "", "server address")
+	flag.StringVar(&conf.Password, "k", "", "password")
+	flag.StringVar(&conf.LocalAddr, "l", "127.0.0.1:1080", "SOCKS5 server address")
+	flag.StringVar(&conf.HTTPAddr, "h", "127.0.0.1:8090", "PAC server address")
 	flag.Parse()
-	if *server == "" || *local == "" || *password == "" {
+	if conf.ServerAddr == "" || conf.Password == "" {
 		flag.Usage()
 		return
 	}
-	ln, err := net.Listen("tcp", *local)
-	if err != nil {
-		logError.Fatalln("listen:", err)
-	}
-	logInfo.Println("listening at", *local)
-	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			logError.Println("accept:", err)
-			continue
-		}
-		go handleConn(conn)
-	}
+	b, _ := json.Marshal(conf)
+	log.Print("Config: ", string(b))
+	log.Print("Initializing")
+	startHTTP(&conf)
+	startTCPRelay(&conf)
+	log.Print("Started")
+	log.Printf("Please change PAC to http://%s/proxy.pac", conf.HTTPAddr)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	<-c
+	log.Print("Ended")
 }

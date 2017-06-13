@@ -17,13 +17,13 @@ type encryptedConn struct {
 }
 
 // NewEncryptedConn returns an AES-256-CFB encrypted connection
-func NewEncryptedConn(conn net.Conn, password string, target []byte) (net.Conn, error) {
+func NewEncryptedConn(conn net.Conn, password string, target []byte) net.Conn {
 	key := genKey(password, 32)
 	blk, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &encryptedConn{Conn: conn, blk: blk}, nil
+	return &encryptedConn{Conn: conn, blk: blk}
 }
 
 func (c *encryptedConn) Read(b []byte) (int, error) {

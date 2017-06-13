@@ -78,7 +78,7 @@ func readAddr(r io.Reader) (Addr, error) {
 }
 
 // Handshake for SOCKS5
-func Handshake(conn net.Conn) (Addr, error) {
+func Handshake(conn io.ReadWriter) (Addr, error) {
 	var err error
 	// read VER, NMETHODS, METHODS
 	buf := make([]byte, 2)
@@ -86,7 +86,7 @@ func Handshake(conn net.Conn) (Addr, error) {
 		return nil, err
 	}
 	if buf[0] != socks5Version {
-		return nil, errors.New(fmt.Sprint("not socks5:", buf[0]))
+		return nil, errors.New(fmt.Sprint("not socks5: ", buf[0]))
 	}
 	buf = make([]byte, buf[1])
 	if _, err = io.ReadFull(conn, buf); err != nil {
