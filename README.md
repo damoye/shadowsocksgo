@@ -3,9 +3,9 @@ A Shadowsocks client with only core features.
 
 ***Do One Thing and Do It Well.***
 ## Features
-- SOCKS5 TCP proxy. UDP is **NOT** supported and never will be.
-- PAC(Proxy auto-config). Only proxy unreachable host.
-- Only AES-256-CFB encryption
+- SOCKS5 TCP proxy. UDP is **NOT** supported.
+- PAC(Proxy auto-config).
+- AES-256-CFB encryption **ONLY**.
 
 ## Install
 ```sh
@@ -15,19 +15,19 @@ go get github.com/damoye/ssgo
 ```
 Usage of ssgo:
   -s string
-    server address
+        server address
   -k string
-    password
-  -l string
-    SOCKS5 server address (default "127.0.0.1:1080")
+        password
   -h string
-    PAC server address (default "127.0.0.1:8090")
+        pac http address (default "127.0.0.1:8090")
+  -l int
+        local socks5 proxy port (default 1080)
 ```
-### 1. Start ssgo
+### Step 0: Start ssgo
 ```sh
 ssgo -s [server_address] -k [password]
 ```
-### 2. Config PAC
+### Step 1: Config PAC
 Config PAC to http://127.0.0.1:8090/proxy.pac
 #### OS X:
 System Preferences -> Network -> Advanced -> Proxies -> Automatic Proxy Configuration

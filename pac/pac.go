@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 // Gen ...
-func Gen(socks5Addr string) (string, error) {
+func Gen(socks5Port int) (string, error) {
 	resp, err := http.Get("https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt")
 	if err != nil {
 		return "", err
@@ -39,6 +40,6 @@ func Gen(socks5Addr string) (string, error) {
 		return "", err
 	}
 	result := strings.Replace(pacJS, "__RULES__", string(b), 1)
-	result = strings.Replace(result, "__SOCKS5ADDR__", socks5Addr, 2)
+	result = strings.Replace(result, "__SOCKS5PORT__", strconv.Itoa(socks5Port), 2)
 	return result, nil
 }

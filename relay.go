@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 
 	"github.com/damoye/ssgo/encrypt"
 	"github.com/damoye/ssgo/socks5"
@@ -42,7 +43,7 @@ func handleConn(c net.Conn, conf *config) {
 }
 
 func startRelay(conf *config) {
-	ln, err := net.Listen("tcp", conf.LocalAddr)
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(conf.LocalPort))
 	if err != nil {
 		panic(err)
 	}

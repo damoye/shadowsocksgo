@@ -12,8 +12,8 @@ func main() {
 	conf := config{}
 	flag.StringVar(&conf.ServerAddr, "s", "", "server address")
 	flag.StringVar(&conf.Password, "k", "", "password")
-	flag.StringVar(&conf.LocalAddr, "l", "127.0.0.1:1080", "SOCKS5 server address")
-	flag.StringVar(&conf.HTTPAddr, "h", "127.0.0.1:8090", "PAC server address")
+	flag.StringVar(&conf.HTTPAddr, "h", "127.0.0.1:8090", "pac http address")
+	flag.IntVar(&conf.LocalPort, "l", 1080, "local socks5 proxy port")
 	flag.Parse()
 	if conf.ServerAddr == "" || conf.Password == "" {
 		flag.Usage()
