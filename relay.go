@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 
-	"github.com/damoye/ssgo/config"
 	"github.com/damoye/ssgo/encrypt"
 	"github.com/damoye/ssgo/socks5"
 )
@@ -15,7 +14,7 @@ func pipe(dst io.Writer, src io.Reader, ch chan error) {
 	ch <- err
 }
 
-func handleConn(c net.Conn, conf *config.Config) {
+func handleConn(c net.Conn, conf *config) {
 	defer c.Close()
 	target, err := socks5.Handshake(c)
 	if err != nil {
@@ -42,7 +41,7 @@ func handleConn(c net.Conn, conf *config.Config) {
 	}
 }
 
-func startTCPRelay(conf *config.Config) {
+func startRelay(conf *config) {
 	ln, err := net.Listen("tcp", conf.LocalAddr)
 	if err != nil {
 		panic(err)

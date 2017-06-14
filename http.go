@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/damoye/ssgo/config"
 	"github.com/damoye/ssgo/pac"
 	"github.com/gorilla/handlers"
 )
@@ -21,7 +20,7 @@ func (s pacServer) getPac(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func startHTTP(conf *config.Config) {
+func startHTTP(conf *config) {
 	pacJS, err := pac.Gen(conf.LocalAddr)
 	if err != nil {
 		panic(err)

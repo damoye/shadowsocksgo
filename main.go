@@ -6,12 +6,10 @@ import (
 	"log"
 	"os"
 	"os/signal"
-
-	"github.com/damoye/ssgo/config"
 )
 
 func main() {
-	conf := config.Config{}
+	conf := config{}
 	flag.StringVar(&conf.ServerAddr, "s", "", "server address")
 	flag.StringVar(&conf.Password, "k", "", "password")
 	flag.StringVar(&conf.LocalAddr, "l", "127.0.0.1:1080", "SOCKS5 server address")
@@ -25,7 +23,7 @@ func main() {
 	log.Print("Config: ", string(b))
 	log.Print("Initializing")
 	startHTTP(&conf)
-	startTCPRelay(&conf)
+	startRelay(&conf)
 	log.Print("Started")
 	log.Printf("Please change PAC to http://%s/proxy.pac", conf.HTTPAddr)
 	c := make(chan os.Signal, 1)
