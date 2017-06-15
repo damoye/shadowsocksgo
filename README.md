@@ -12,23 +12,11 @@ A Shadowsocks client with only core features.
 go get github.com/damoye/ssgo
 ```
 ## Usage
-```
-Usage of ssgo:
-  -s string
-        server address
-  -k string
-        password
-  -h string
-        pac http address (default "127.0.0.1:8090")
-  -l int
-        local socks5 proxy port (default 1080)
-```
 ### Step 0: Start ssgo
 ```sh
 ssgo -s [server_address] -k [password]
 ```
 ### Step 1: Config PAC
-Config PAC to http://127.0.0.1:8090/proxy.pac
 #### OS X:
 System Preferences -> Network -> Advanced -> Proxies -> Automatic Proxy Configuration
 
@@ -36,9 +24,5 @@ System Preferences -> Network -> Advanced -> Proxies -> Automatic Proxy Configur
 - Click OK
 - Click Apply
 
-#### Windows:
-TODO
-
 ## TODO
-- Config PAC in Windows
 - Test coverage

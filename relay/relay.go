@@ -1,11 +1,11 @@
-package main
+package relay
 
 import (
 	"io"
 	"log"
 	"net"
-	"strconv"
 
+	"github.com/damoye/ssgo/consts"
 	"github.com/damoye/ssgo/encrypt"
 	"github.com/damoye/ssgo/socks5"
 )
@@ -15,21 +15,21 @@ func pipe(dst io.Writer, src io.Reader, ch chan error) {
 	ch <- err
 }
 
-func handleConn(c net.Conn, conf *config) {
+func handleConn(c net.Conn, server, password string) {
 	defer c.Close()
 	target, err := socks5.Handshake(c)
 	if err != nil {
 		log.Print("handshake: ", err)
 		return
 	}
-	rc, err := net.Dial("tcp", conf.ServerAddr)
+	rc, err := net.Dial("tcp", server)
 	if err != nil {
 		log.Print("dial: ", err)
 		return
 	}
 	defer rc.Close()
-	log.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), conf.ServerAddr, target)
-	rc = encrypt.NewEncryptedConn(rc, conf.Password, target)
+	log.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), server, target)
+	rc = encrypt.NewEncryptedConn(rc, password, target)
 	if _, err = rc.Write(target); err != nil {
 		log.Print("write: ", err)
 		return
@@ -42,8 +42,9 @@ func handleConn(c net.Conn, conf *config) {
 	}
 }
 
-func startRelay(conf *config) {
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(conf.LocalPort))
+// Start ...
+func Start(server, password string) {
+	ln, err := net.Listen("tcp", consts.SOCKS5Addr)
 	if err != nil {
 		panic(err)
 	}
@@ -53,7 +54,7 @@ func startRelay(conf *config) {
 			if err != nil {
 				panic(err)
 			}
-			go handleConn(conn, conf)
+			go handleConn(conn, server, password)
 		}
 	}()
 }

@@ -1,33 +1,29 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/damoye/ssgo/consts"
+	"github.com/damoye/ssgo/pac"
+	"github.com/damoye/ssgo/relay"
 )
 
 func main() {
-	conf := config{}
-	flag.StringVar(&conf.ServerAddr, "s", "", "server address")
-	flag.StringVar(&conf.Password, "k", "", "password")
-	flag.StringVar(&conf.HTTPAddr, "h", "127.0.0.1:8090", "pac http address")
-	flag.IntVar(&conf.LocalPort, "l", 1080, "local socks5 proxy port")
+	server := flag.String("s", "", "server address")
+	password := flag.String("k", "", "password")
 	flag.Parse()
-	if conf.ServerAddr == "" || conf.Password == "" {
+	if *server == "" || *password == "" {
 		flag.Usage()
 		return
 	}
-	b, _ := json.Marshal(conf)
-	log.Print("Config: ", string(b))
-	log.Print("Initializing")
-	startHTTP(&conf)
-	startRelay(&conf)
-	log.Print("Started")
-	log.Printf("Please change PAC to http://%s/proxy.pac", conf.HTTPAddr)
+	pac.Start()
+	relay.Start(*server, *password)
+	log.Print("SOCKS5 is listening at ", consts.SOCKS5Addr)
+	log.Print("PAC URL is http://127.0.0.1", consts.HTTPAddr, "/proxy.pac")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
-	log.Print("Ended")
 }
