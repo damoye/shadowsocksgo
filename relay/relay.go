@@ -29,7 +29,7 @@ func handleConn(c net.Conn, server, password string) {
 	}
 	defer rc.Close()
 	log.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), server, target)
-	rc = encrypt.NewEncryptedConn(rc, password, target)
+	rc = encrypt.NewEncryptedConn(rc, password)
 	if _, err = rc.Write(target); err != nil {
 		log.Print("write: ", err)
 		return
@@ -42,7 +42,7 @@ func handleConn(c net.Conn, server, password string) {
 	}
 }
 
-// Start ...
+// Start starts to relay TCP connection
 func Start(server, password string) {
 	ln, err := net.Listen("tcp", consts.SOCKS5Addr)
 	if err != nil {

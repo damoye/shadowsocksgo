@@ -47,18 +47,19 @@ func gen() string {
 
 func getPac(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		log.Print("not allowed HTTP method: ", r.Method)
+		log.Print("HTTP method not allowed: ", r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	if _, err := w.Write([]byte(pacContent)); err != nil {
 		log.Print("write: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		log.Print("GET /proxy.pac")
 	}
-	log.Print("GET /proxy.pac")
 }
 
-// Start ...
+// Start starts to serve PAC
 func Start() {
 	http.HandleFunc("/proxy.pac", getPac)
 	go func() {

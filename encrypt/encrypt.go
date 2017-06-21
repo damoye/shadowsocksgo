@@ -17,7 +17,7 @@ type encryptedConn struct {
 }
 
 // NewEncryptedConn returns an AES-256-CFB encrypted connection
-func NewEncryptedConn(conn net.Conn, password string, target []byte) net.Conn {
+func NewEncryptedConn(conn net.Conn, password string) net.Conn {
 	key := genKey(password, 32)
 	blk, err := aes.NewCipher(key)
 	if err != nil {

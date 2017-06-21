@@ -19,7 +19,7 @@ const (
 	socks5IP6    = 4
 )
 
-// Addr ...
+// Addr represents SOCKS address RFC 1928
 type Addr []byte
 
 func (a Addr) String() string {
@@ -79,39 +79,37 @@ func readAddr(r io.Reader) (Addr, error) {
 
 // Handshake for SOCKS5
 func Handshake(conn io.ReadWriter) (Addr, error) {
-	var err error
-	// read VER, NMETHODS, METHODS
+	// +----+----------+----------+
+	// |VER | NMETHODS | METHODS  |
+	// +----+----------+----------+
+	// | 1  |    1     | 1 to 255 |
+	// +----+----------+----------+
 	buf := make([]byte, 2)
-	if _, err = io.ReadFull(conn, buf); err != nil {
+	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
 	if buf[0] != socks5Version {
 		return nil, errors.New(fmt.Sprint("not socks5: ", buf[0]))
 	}
 	buf = make([]byte, buf[1])
-	if _, err = io.ReadFull(conn, buf); err != nil {
+	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
-	noAuthExist := false
-	for _, method := range buf {
-		if method == socks5AuthNone {
-			noAuthExist = true
-			break
-		}
-	}
-	if !noAuthExist {
-		conn.Write([]byte{socks5Version, 0xff})
-		return nil, errors.New(fmt.Sprint("no method noAuth: ", buf))
-	}
-
-	// write VER, METHOD
-	if _, err = conn.Write([]byte{socks5Version, socks5AuthNone}); err != nil {
+	// +----+--------+
+	// |VER | METHOD |
+	// +----+--------+
+	// | 1  |   1    |
+	// +----+--------+
+	if _, err := conn.Write([]byte{socks5Version, socks5AuthNone}); err != nil {
 		return nil, err
 	}
-
-	// read VER, CMD, RSV, ATYP, DST.ADDR, DST.PORT
+	// +----+-----+-------+------+----------+----------+
+	// |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+	// +----+-----+-------+------+----------+----------+
+	// | 1  |  1  | X'00' |  1   | Variable |    2     |
+	// +----+-----+-------+------+----------+----------+
 	buf = make([]byte, 3)
-	if _, err = io.ReadFull(conn, buf); err != nil {
+	if _, err := io.ReadFull(conn, buf); err != nil {
 		return nil, err
 	}
 	if buf[1] != socks5Connect {
@@ -122,7 +120,11 @@ func Handshake(conn io.ReadWriter) (Addr, error) {
 	if err != nil {
 		return nil, err
 	}
-	// write VER REP RSV ATYP BND.ADDR BND.PORT
+	// +----+-----+-------+------+----------+----------+
+	// |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
+	// +----+-----+-------+------+----------+----------+
+	// | 1  |  1  | X'00' |  1   | Variable |    2     |
+	// +----+-----+-------+------+----------+----------+
 	reply := []byte{socks5Version, 0, 0, socks5IP4, 0, 0, 0, 0, 0, 0}
 	_, err = conn.Write(reply)
 	return dest, err
