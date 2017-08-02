@@ -22,7 +22,7 @@ func main() {
 	pac.Start()
 	relay.Start(*server, *password)
 	log.Print("SOCKS5 is listening at ", consts.SOCKS5Addr)
-	log.Print("PAC URL is http://127.0.0.1", consts.HTTPAddr, "/proxy.pac")
+	log.Print("PAC URL is http://", consts.HTTPAddr, "/proxy.pac")
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c

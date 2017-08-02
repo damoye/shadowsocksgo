@@ -13,9 +13,7 @@ import (
 	"github.com/damoye/ssgo/consts"
 )
 
-var pacContent = gen()
-
-func gen() string {
+func generate() string {
 	resp, err := http.Get("https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt")
 	if err != nil {
 		panic(err)
@@ -45,13 +43,17 @@ func gen() string {
 	return strings.Replace(consts.PACTemplate, "__RULES__", string(b), 1)
 }
 
-func getPac(w http.ResponseWriter, r *http.Request) {
+type server struct {
+	content string
+}
+
+func (s *server) handlePAC(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		log.Print("HTTP method not allowed: ", r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	if _, err := w.Write([]byte(pacContent)); err != nil {
+	if _, err := w.Write([]byte(s.content)); err != nil {
 		log.Print("write: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	} else {
@@ -61,7 +63,8 @@ func getPac(w http.ResponseWriter, r *http.Request) {
 
 // Start starts to serve PAC
 func Start() {
-	http.HandleFunc("/proxy.pac", getPac)
+	s := server{content: generate()}
+	http.HandleFunc("/proxy.pac", s.handlePAC)
 	go func() {
 		panic(http.ListenAndServe(consts.HTTPAddr, nil))
 	}()

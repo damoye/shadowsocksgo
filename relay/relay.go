@@ -28,7 +28,8 @@ func handleConn(c net.Conn, server, password string) {
 		return
 	}
 	defer rc.Close()
-	log.Printf("proxy %s <-> %s <-> %s", c.RemoteAddr(), server, target)
+	targetStr := target.String()
+	log.Printf("proxy %s - %s - %s", c.RemoteAddr(), server, targetStr)
 	rc = encrypt.NewEncryptedConn(rc, password)
 	if _, err = rc.Write(target); err != nil {
 		log.Print("write: ", err)
@@ -40,6 +41,7 @@ func handleConn(c net.Conn, server, password string) {
 	if err = <-ch; err != nil {
 		log.Print("pipe: ", err)
 	}
+	log.Printf("proxy %s / %s / %s", c.RemoteAddr(), server, targetStr)
 }
 
 // Start starts to relay TCP connection
