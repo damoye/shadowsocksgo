@@ -29,12 +29,12 @@ func handleConn(c net.Conn, server, password string) {
 	}
 	defer rc.Close()
 	targetStr := target.String()
-	log.Printf("proxy %s - %s - %s", c.RemoteAddr(), server, targetStr)
-	rc = encrypt.NewEncryptedConn(rc, password)
+	rc = encrypt.NewConn(rc, password)
 	if _, err = rc.Write(target); err != nil {
 		log.Print("write: ", err)
 		return
 	}
+	log.Printf("proxy %s - %s - %s", c.RemoteAddr(), server, targetStr)
 	ch := make(chan error, 1)
 	go pipe(rc, c, ch)
 	go pipe(c, rc, ch)

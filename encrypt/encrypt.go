@@ -9,24 +9,24 @@ import (
 	"net"
 )
 
-type encryptedConn struct {
+type conn struct {
 	net.Conn
 	blk     cipher.Block
 	rStream cipher.Stream
 	wStream cipher.Stream
 }
 
-// NewEncryptedConn returns an AES-256-CFB encrypted connection
-func NewEncryptedConn(conn net.Conn, password string) net.Conn {
+// NewConn returns an AES-256-CFB encrypted connection
+func NewConn(c net.Conn, password string) net.Conn {
 	key := genKey(password, 32)
 	blk, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}
-	return &encryptedConn{Conn: conn, blk: blk}
+	return &conn{Conn: c, blk: blk}
 }
 
-func (c *encryptedConn) Read(b []byte) (int, error) {
+func (c *conn) Read(b []byte) (int, error) {
 	if c.rStream == nil {
 		buf := make([]byte, c.blk.BlockSize())
 		if _, err := io.ReadFull(c.Conn, buf); err != nil {
@@ -41,7 +41,7 @@ func (c *encryptedConn) Read(b []byte) (int, error) {
 	return n, err
 }
 
-func (c *encryptedConn) Write(b []byte) (int, error) {
+func (c *conn) Write(b []byte) (int, error) {
 	if c.wStream == nil {
 		buf := make([]byte, c.blk.BlockSize())
 		if _, err := io.ReadFull(rand.Reader, buf); err != nil {
