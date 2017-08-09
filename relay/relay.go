@@ -34,14 +34,14 @@ func handleConn(c net.Conn, server, password string) {
 		log.Print("write: ", err)
 		return
 	}
-	log.Printf("proxy %s - %s - %s", c.RemoteAddr(), server, targetStr)
+	log.Printf("relay %s - %s", c.RemoteAddr(), targetStr)
 	ch := make(chan error, 1)
 	go pipe(rc, c, ch)
 	go pipe(c, rc, ch)
 	if err = <-ch; err != nil {
 		log.Print("pipe: ", err)
 	}
-	log.Printf("proxy %s / %s / %s", c.RemoteAddr(), server, targetStr)
+	log.Printf("relay %s / %s", c.RemoteAddr(), targetStr)
 }
 
 // Start starts to relay TCP connection

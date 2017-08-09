@@ -43,27 +43,29 @@ func generate() string {
 	return strings.Replace(consts.PACTemplate, "__RULES__", string(b), 1)
 }
 
-type server struct {
-	content string
+func logHTTP(r *http.Request, status int) {
+	log.Printf("%s %s %s %d", r.Method, r.RequestURI, r.Proto, status)
 }
+
+type server string
 
 func (s *server) handlePAC(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		log.Print("HTTP method not allowed: ", r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		logHTTP(r, http.StatusMethodNotAllowed)
 		return
 	}
-	if _, err := w.Write([]byte(s.content)); err != nil {
-		log.Print("write: ", err)
+	if _, err := w.Write([]byte(*s)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		logHTTP(r, http.StatusInternalServerError)
 	} else {
-		log.Print("GET /proxy.pac")
+		logHTTP(r, http.StatusOK)
 	}
 }
 
 // Start starts to serve PAC
 func Start() {
-	s := server{content: generate()}
+	s := server(generate())
 	http.HandleFunc("/proxy.pac", s.handlePAC)
 	go func() {
 		panic(http.ListenAndServe(consts.HTTPAddr, nil))
