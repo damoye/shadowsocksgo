@@ -15,15 +15,20 @@ import (
 
 func generate() string {
 	resp, err := http.Get("https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt")
-	if err != nil {
-		panic(err)
+	s := ""
+	if err == nil {
+		defer resp.Body.Close()
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
+		s = string(b)
+	} else {
+		log.Print("get gfwlist from github failed: ", err)
+		s = gfwlist
 	}
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		panic(err)
-	}
-	if b, err = base64.StdEncoding.DecodeString(string(b)); err != nil {
 		panic(err)
 	}
 	scanner := bufio.NewScanner(bytes.NewReader(b))
